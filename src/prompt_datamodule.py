@@ -4,10 +4,10 @@ from core_utils import load_data
 from chunked_sampler import ChunkedSampler
 
 class PromptDataset(Dataset):
-    def __init__(self, prompt_path="../prompt_files/refl_data.json"):
+    def __init__(self, prompt_path="../prompt_files/refl_data.json", prompt_multiplier = 1):
         self.prompts = load_data(prompt_path=prompt_path)
         if len(self.prompts) == 1:
-            self.prompts = self.prompts * 2000 #*10000
+            self.prompts = self.prompts * prompt_multiplier #* 2000 #*10000
         print(f"Loaded {len(self.prompts)} prompts from {prompt_path}")
 
     def __len__(self):
@@ -28,8 +28,8 @@ class PromptDataModule(pl.LightningDataModule):
         self.setup()
 
     def setup(self, stage=None):
-        self.train_dataset = PromptDataset(prompt_path=self.training_prompt_path)
-        self.val_dataset = PromptDataset(prompt_path=self.validation_prompt_path)
+        self.train_dataset = PromptDataset(prompt_path=self.training_prompt_path, prompt_multiplier=100)
+        self.val_dataset = PromptDataset(prompt_path=self.validation_prompt_path, prompt_multiplier=1)
 
     def train_dataloader(self):
         return DataLoader(

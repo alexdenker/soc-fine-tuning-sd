@@ -73,6 +73,7 @@ def evaluate_checkpoint(ckpt_path, config, device="cuda", eta=1.0, num_samples_p
     # List to store DreamSim variance per prompt
     prompt_avg_ds = []
     
+    save_idx = 0
     for batch_idx, batch in enumerate(val_dataloader):
         prompt_texts = batch["text"]
         batch_size = len(prompt_texts)
@@ -86,7 +87,7 @@ def evaluate_checkpoint(ckpt_path, config, device="cuda", eta=1.0, num_samples_p
         kwargs = {}
         if hasattr(config, "guidance_scale"):
             kwargs["guidance_scale"] = config.guidance_scale
-
+        print("kwargs: ", kwargs)
         # Generate images in one call
         result = model.soc_pipeline(
             repeated_prompts,
@@ -100,7 +101,12 @@ def evaluate_checkpoint(ckpt_path, config, device="cuda", eta=1.0, num_samples_p
             **kwargs,
         )
         images = result.images
+        for img in images:
+            img.save(f"checkpoint_evals/img_{save_idx}.png", format="PNG")
+            save_idx += 1
 
+        # We do an external evaluation and only require the saved samples
+        """
         # Compute metrics for all images
         ir_vals = do_image_reward(images=images, prompts=repeated_prompts)
         cs_vals = do_clip_score(images=images, prompts=repeated_prompts)
@@ -133,7 +139,7 @@ def evaluate_checkpoint(ckpt_path, config, device="cuda", eta=1.0, num_samples_p
             #   3) Return (variance, variance_variance)
             ds_var, _ = do_dreamsim_diversity(prompt_images, device=device)
             prompt_avg_ds.append(ds_var)
-            
+        """
     # Compute overall means (across prompt-level means)
     if len(prompt_avg_ir) > 0:
         ir_tensor = torch.tensor(prompt_avg_ir)
@@ -258,12 +264,13 @@ if __name__ == "__main__":
         if args.timestep_spacing is not None:
             config.timestep_spacing = args.timestep_spacing
 
+        print("num samples per prompt: ", args.num_samples_per_prompt)
         # Run evaluation and get output
         eval_output = evaluate_checkpoint(
             args.ckpt, 
             config, 
             device=args.device, 
-            eta=args.eta, 
+            eta=config.eta, 
             num_samples_per_prompt=args.num_samples_per_prompt
         )
         

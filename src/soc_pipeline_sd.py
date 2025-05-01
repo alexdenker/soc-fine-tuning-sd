@@ -430,7 +430,6 @@ class SOCStableDiffusionPipeline(
             generator,
             latents,
         )
-
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 

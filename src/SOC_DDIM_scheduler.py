@@ -230,6 +230,7 @@ class SOCDDIMScheduler(DDIMScheduler):
         # σ_t = sqrt((1 − α_t−1)/(1 − α_t)) * sqrt(1 − α_t/α_t−1)
         variance = self._get_variance(timestep, prev_timestep)
         # print(f'variance: {variance}')
+
         std_dev_t = eta * variance ** (0.5)
         std_dev_t = std_dev_t[...,None,None,None]
 
